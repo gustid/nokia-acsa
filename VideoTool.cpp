@@ -16,6 +16,12 @@ int S_MIN = 0;
 int S_MAX = 256;
 int V_MIN = 0;
 int V_MAX = 256;
+
+
+//coordonatele obiectelor
+Point roz(0,0);
+Point galben(0,0);
+
 //default capture width and height
 const int FRAME_WIDTH = 640;
 const int FRAME_HEIGHT = 480;
@@ -126,7 +132,7 @@ void morphOps(Mat &thresh) {
 
 
 }
-void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
+void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed, Point &pt) {
 
 	Mat temp;
 	threshold.copyTo(temp);
@@ -165,7 +171,10 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 			if (objectFound == true) {
 				putText(cameraFeed, "Tracking Object", Point(0, 50), 2, 1, Scalar(0, 255, 0), 2);
 				//draw object location on screen
-				//cout << x << "," << y;
+				//cout<<"Object tracked at " << x << "," << y<<endl;
+        pt.x = x;
+        pt.y = y;
+        //aici trebuie salvat
 				drawObject(x, y, cameraFeed);
 
 			}
@@ -197,7 +206,7 @@ int main(int argc, char* argv[])
 	//video capture object to acquire webcam feed
 	VideoCapture capture;
 	//open capture object at location zero (default location for webcam)
-	capture.open(0);
+	capture.open("rtmp://172.16.254.99/live/nimic");
 	//set height and width of capture frame
 	capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 	capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
@@ -216,7 +225,29 @@ int main(int argc, char* argv[])
 		cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
 		//filter HSV image between values and store filtered image to
 		//threshold matrix
-		inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold);
+		//inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold);
+    inRange(HSV, Scalar(167, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold);//roz
+    if (useMorphOps)
+			morphOps(threshold);
+		//pass in thresholded frame to our object tracking function
+		//this function will return the x and y coordinates of the
+		//filtered object
+		if (trackObjects)
+   {
+			trackFilteredObject(x, y, threshold, cameraFeed,roz);
+      cout<<"point roz "<<roz.x<<" , "<<roz.y<<endl;
+      }
+  
+  
+		//show frames
+		imshow(windowName2, threshold);
+		imshow(windowName, cameraFeed);
+		//imshow(windowName1, HSV);
+		setMouseCallback("Original Image", on_mouse, &p);
+		//delay 30ms so that screen can refresh.
+		//image will not appear without this waitKey() command
+		waitKey(30);
+    inRange(HSV, Scalar(22, 82, V_MIN), Scalar(34, S_MAX, V_MAX), threshold);//galben
 		//perform morphological operations on thresholded image to eliminate noise
 		//and emphasize the filtered object(s)
 		if (useMorphOps)
@@ -225,12 +256,15 @@ int main(int argc, char* argv[])
 		//this function will return the x and y coordinates of the
 		//filtered object
 		if (trackObjects)
-			trackFilteredObject(x, y, threshold, cameraFeed);
+   {
+			trackFilteredObject(x, y, threshold, cameraFeed,galben);
+      cout<<"point galben "<<galben.x<<" , "<<galben.y<<endl;
+      }
 
 		//show frames
 		imshow(windowName2, threshold);
 		imshow(windowName, cameraFeed);
-		imshow(windowName1, HSV);
+		//imshow(windowName1, HSV);
 		setMouseCallback("Original Image", on_mouse, &p);
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command
@@ -239,4 +273,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
