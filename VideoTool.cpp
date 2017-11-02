@@ -5,6 +5,17 @@
 #include "opencv2/highgui/highgui.hpp"
 //#include <opencv2\cv.h>
 #include "opencv2/opencv.hpp"
+#include <arpa/inet.h>
+#include <errno.h>
+#include <stdio.h>
+#include <memory.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <string.h>
+
+#define HOST_IP "193.226.12.217"
+#define PORT_NUM 20236         /* daytime port number */
+#define BUF_SIZE 1024
 
 using namespace std;
 using namespace cv;
@@ -184,9 +195,90 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed, Point &
 		else putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", Point(0, 50), 1, 2, Scalar(0, 0, 255), 2);
 	}
 }
+
+int openSocket(){
+        struct sockaddr_in remote;
+        memset(&remote, 0, sizeof(remote));
+        remote.sin_family = AF_INET;
+        remote.sin_port = htons(PORT_NUM);
+        remote.sin_addr.s_addr = inet_addr(HOST_IP);
+     
+        if (remote.sin_addr.s_addr == INADDR_NONE)
+        {
+            perror("inet_addr");
+            return -1;
+        }
+     
+        /* Create a socket */
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        if(sock < 0)
+        {
+            perror("socket");
+            return -1;
+        }
+     
+        /* Connect to remote host */
+        if(connect(sock, (struct sockaddr *) &remote, sizeof(remote)) < 0)
+        {
+            perror("connect");
+            close(sock);
+            return -1;
+        }
+        return sock;
+}
+
+void sendSocket(int sock, char *s){
+	 
+     
+        /* Read the data */
+        //char buffer[BUF_SIZE + 1];
+       // ssize_t tot = 0;
+	char c[2];
+  int i;
+  ssize_t cur;
+  for(i=0; i<strlen(s); i++){
+    if(s[i] == 'f' || s[i] == 's' || s[i] == 'r' || s[i] == 'l' ||s[i] == 'b'){
+  		sprintf(c, "%c", s[i]);
+  		cur = send(sock, c, sizeof(c), 0);
+  		if (cur < 0)
+  		{
+  			if (errno != EINTR)
+  			{
+  			    perror("send");
+  			    close(sock);
+  			    return;
+  			}
+  			else
+  			{
+  			    /* No data was write, interrupted */
+  			    continue;
+  			}
+  		}
+  		else if (!cur)
+  		{
+  			break;
+  		}
+     }
+     sleep(1);
+  }
+  sprintf(c, "%c", 's');
+  cur = send(sock, c, sizeof(c), 0);
+  if (cur < 0)
+  {
+  	if (errno != EINTR)
+  	{
+  	    perror("send");
+  	    close(sock);
+  	    return ;
+  	}
+  }
+  
+}  
 int main(int argc, char* argv[])
 {
-
+  int sock = openSocket();
+  sendSocket(sock, "fsbsrsls");
+	/*
 	//some boolean variables for different functionality within this
 	//program
 	bool trackObjects = true;
@@ -270,6 +362,7 @@ int main(int argc, char* argv[])
 		//image will not appear without this waitKey() command
 		waitKey(30);
 	}
-
+	*/
+	
 	return 0;
 }
