@@ -16,6 +16,7 @@
 #define HOST_IP "193.226.12.217"
 #define PORT_NUM 20236         /* daytime port number */
 #define BUF_SIZE 1024
+//
 
 using namespace std;
 using namespace cv;
