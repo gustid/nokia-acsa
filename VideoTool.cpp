@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
 
 		sleep(1);
 
-		//show frames
+		//show
 		imshow(windowName2, threshold);
 		imshow(windowName, cameraFeed);
 		//imshow(windowName1, HSV);
@@ -431,16 +431,10 @@ int main(int argc, char* argv[])
      	cout<<"point albastru "<<albastru.x<<" , "<<albastru.y<<endl;
     }
    sleep(1);
-<<<<<<< HEAD
     char *c = getNextMove();
 		sendSocket(sock, c);
 		printf("%c \n",c[0]);
-=======
-    //char *c = getNextMove();
-		//sendSocket(sock, c);
-		//printf("%c \n",c[0]);
->>>>>>> eba4106e7a143a870c4f52c7f234fd3234ad8274
-    
+   //ana are emre
 	}
 	
 	
